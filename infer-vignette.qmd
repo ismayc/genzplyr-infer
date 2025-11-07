@@ -1,0 +1,202 @@
+---
+title: "infer package flex"
+author: "ChetGPT + ChatGPT"
+date: 2025-11-07
+format:
+  html:
+    code-fold: show
+    toc: true
+    toc-depth: 2
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+# load core packages
+library(tidyverse)
+library(moderndive)
+library(infer)
+
+# for reproducibility
+set.seed(2025)
+```
+
+## Overview
+
+This vignette shows how to use **infer** with the `spotify_by_genre` data from **moderndive**.
+You will run a randomization test for a difference in means and build a bootstrap confidence interval.
+
+The core **infer** workflow is: `specify()` -> `hypothesize()` -> `generate()` -> `calculate()` -> `visualize()` -> `summarize()`.
+
+---
+
+## Peek at the data
+
+```{r}
+# look at structure of the dataset
+glimpse(spotify_by_genre)
+```
+
+---
+
+## Visual comparison: energy by track_genre
+
+```{r}
+# keep dubstep and rock only
+spotify_by_genre |>
+  # set up the plot mapping
+  filter(track_genre %in% c("dubstep", "rock")) |>
+  # draw a simple boxplot
+  ggplot(aes(x = track_genre, y = energy, fill = track_genre)) +
+  # add boxplots
+  geom_boxplot(alpha = 0.7) +
+  # label the plot
+  labs(title = "Energy by track_genre", x = NULL, y = "Energy") +
+  # minimal theme
+  theme_minimal() +
+  # remove legend (redundant with x-axis labels)
+  theme(legend.position = "none")
+```
+
+---
+
+## Hypothesis test: is mean energy different between dubstep and rock?
+
+**Hypotheses**
+
+* $H_0: \mu_{\text{dubstep}} - \mu_{\text{rock}} = 0$
+* $H_A: \mu_{\text{dubstep}} - \mu_{\text{rock}} \neq 0$
+
+Set $\alpha = 0.05$ to set a threshold and then decide whether to reject $H_0$.
+
+### Build the null distribution via permutation and visualize with the observed statistic shaded
+
+More information on what's going on in each step can be found in the [Hypothesis Testing chapter](https://moderndive.com/v2/hypothesis-testing.html#ht-infer) of ModernDive.
+
+```{r}
+# start with the raw data and keep only the two track_genres of interest
+spotify_by_genre |>
+  # declare response and explanatory variables for a difference in means
+  filter(track_genre %in% c("dubstep", "rock")) |>
+  # tell infer we want energy by track_genre
+  specify(energy ~ track_genre) |>
+  # encode the null world of no association between energy and track_genre
+  hypothesize(null = "independence") |>
+  # shuffle labels to simulate the null distribution
+  generate(reps = 1000, type = "permute") |>
+  # compute the difference in means for each permuted sample
+  calculate(stat = "diff in means", order = c("dubstep", "rock")) |>
+  # draw the null distribution
+  visualize() +
+  # shade the two-sided p-value region using the observed difference in means
+  shade_p_value(
+    # compute the observed stat inline from the original data
+    obs_stat = spotify_by_genre |>
+      # same filtering as above to match the analysis
+      filter(track_genre %in% c("dubstep", "rock")) |>
+      # same specification as above
+      specify(energy ~ track_genre) |>
+      # compute the observed difference in means
+      calculate(stat = "diff in means", order = c("dubstep", "rock")) |>
+      # pull the numeric value
+      dplyr::pull(stat),
+    direction = "two-sided"
+  )
+```
+
+### Compute the p-value
+
+```{r}
+# start with the raw data and keep only the two track_genres of interest
+spotify_by_genre |>
+  # declare response and explanatory variables for a difference in means
+  filter(track_genre %in% c("dubstep", "rock")) |>
+  # tell infer we want energy by track_genre
+  specify(energy ~ track_genre) |>
+  # encode the null world of no association between energy and track_genre
+  hypothesize(null = "independence") |>
+  # shuffle labels to simulate the null distribution
+  generate(reps = 2000, type = "permute") |>
+  # compute the difference in means for each permuted sample
+  calculate(stat = "diff in means", order = c("dubstep", "rock")) |>
+  # get a two-sided p-value using the observed statistic computed inline
+  get_p_value(
+    obs_stat = spotify_by_genre |>
+      filter(track_genre %in% c("dubstep", "rock")) |>
+      specify(energy ~ track_genre) |>
+      calculate(stat = "diff in means", order = c("dubstep", "rock")) |>
+      dplyr::pull(stat),
+    direction = "two-sided"
+  )
+```
+
+**Interpretation tip**
+If the p-value is small, the observed difference in mean energy is unlikely under the null model, which supports the alternative.
+
+---
+
+## Confidence interval: mean energy for dubstep via bootstrap
+
+We now build a 95 percent bootstrap interval for the mean energy within the dubstep genre.
+
+More details on this workflow can be found in the [Confidence Intervals chapter](https://moderndive.com/v2/confidence-intervals.html#infer-workflow) of ModernDive.
+
+### Visualize the bootstrap distribution and shade a percentile interval
+
+```{r}
+# keep only dubstep tracks
+spotify_by_genre |>
+  # declare the response variable for a one-sample mean
+  filter(track_genre == "dubstep") |>
+  # tell infer we care about the distribution of energy
+  specify(response = energy) |>
+  # sample with replacement to create bootstrap samples
+  generate(reps = 2000, type = "bootstrap") |>
+  # compute the mean for each bootstrap sample
+  calculate(stat = "mean") |>
+  # draw the bootstrap distribution
+  visualize() +
+  # shade the default 95% percentile-based confidence interval
+  shade_ci(
+    # compute CI endpoints inline from the same bootstrap results
+    endpoints = spotify_by_genre |>
+      filter(track_genre == "dubstep") |>
+      specify(response = energy) |>
+      generate(reps = 2000, type = "bootstrap") |>
+      calculate(stat = "mean") |>
+      get_ci()
+  )
+```
+
+### Report the numeric interval
+
+```{r}
+# keep only dubstep tracks
+spotify_by_genre |>
+  # declare the response variable for a one-sample mean
+  filter(track_genre == "dubstep") |>
+  # tell infer we care about the distribution of energy
+  specify(response = energy) |>
+  # sample with replacement to create bootstrap samples
+  generate(reps = 2000, type = "bootstrap") |>
+  # compute the mean for each bootstrap sample
+  calculate(stat = "mean") |>
+  # compute a 95% percentile confidence interval
+  get_ci()
+```
+
+**Interpretation tip**
+This interval gives a range of plausible values for the true average energy of dubstep tracks in the population represented by this sample.
+
+---
+
+## Wrap up
+
+You used a consistent set of verbs to run a randomization test and to build a bootstrap confidence interval.
+
+This pattern helps focus on the statistical idea while keeping the code compact and readable.
+
+> Your randomization test and bootstrap CI got matching verbs? Bro, that’s not just good coding style — that’s data rizz.
+

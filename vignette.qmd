@@ -219,9 +219,3 @@ sessionInfo()
 
 - `spotify_by_genre` description and fields. :contentReference[oaicite:1]{index=1}  
 - `genzplyr` verb mapping and examples. :contentReference[oaicite:2]{index=2}
-
-If you want a PDF output, change the `format` section in the YAML to `pdf` and knit.
-::contentReference[oaicite:3]{index=3}
-```
-
-[1]: https://moderndive.github.io/moderndive/reference/spotify_by_genre.html "Spotify by Genre Dataset — spotify_by_genre • moderndive"
