@@ -11,11 +11,11 @@ This repo holds two Quarto vignettes that use the `moderndive::spotify_by_genre`
 
 1. show off five `genzplyr` examples.  
 
-  Each example comes with:
-  - **Translator mode:** so you know what the "grown-up" `dplyr` code would be.
-  - **Two explanations:** one in fluent Gen Z and one in normal English (for your data-science prof or future self).
-  - **Actual analysis:** averages, filters, visualizations, the works — but spiced up with slang.
-  
+    Each example comes with:
+    - **Translator mode:** so you know what the "grown-up" `dplyr` code would be.
+    - **Two explanations:** one in fluent Gen Z and one in normal English (for your data-science prof or future self).
+    - **Actual analysis:** averages, filters, visualizations, the works — but spiced up with slang.
+    
 2. Demonstrate how to use the `infer` package to analyze Spotify genre data — with just enough Gen Z energy to keep the boomers intrigued.
 
 ---
