@@ -1,4 +1,4 @@
-# 🎧 genzplyr x Spotify Vibes"
+# 🎧 genzplyr x Spotify Vibes
 
 **Welcome to the most unserious serious data analysis you'll ever see.**  
 We're mixing Spotify data with *pure Gen Z chaos energy* using [`genzplyr`](https://hadley.github.io/genzplyr/) — the parody cousin of `dplyr` nobody asked for but everyone needed.  
