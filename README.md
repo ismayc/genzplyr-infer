@@ -9,7 +9,7 @@ We're mixing Spotify data with *pure Gen Z chaos energy* using [`genzplyr`](http
 
 This repo holds two Quarto vignettes that use the `moderndive::spotify_by_genre` dataset to 
 
-1. show off five `genzplyr` examples.  
+1. Show off five `genzplyr` examples.  
 
     Each example comes with:
     - **Translator mode:** so you know what the "grown-up" `dplyr` code would be.
