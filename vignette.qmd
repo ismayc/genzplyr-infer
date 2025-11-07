@@ -1,0 +1,227 @@
+---
+title: "Low-key flexing on Spotify data using `genzplyr` (Wrangling Spotify data with the `genzplyr` R package)"
+author: "ChetGPT + ChatGPT"
+date: 2025-11-07
+format:
+  html:
+    code-fold: show
+    toc: true
+    toc-depth: 2
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Setup
+
+```{r}
+# Install the pak package if not already installed
+#install.packages("pak")
+
+# Install the genzplyr package from GitHub
+# pak::pak("hadley/genzplyr")
+
+# Load the genzplyr package
+library(genzplyr)
+
+# Load the moderndive package for the spotify dataset
+library(moderndive)
+
+# Load tidyverse
+library(tidyverse)
+```
+
+### About the data
+
+`spotify_by_genre` includes 6,000 Spotify tracks with features like `popularity`, `danceability`, `energy`, `tempo`, and `track_genre` among six genres. Popularity of 50 or higher is flagged as `"popular"` in `popular_or_not`. [Source: [moderndive R package](https://moderndive.github.io/moderndive/reference/spotify_by_genre.html)]
+
+## Quick verb glossary
+
+* `yeet()` = `filter()`
+* `vibe_check()` = `select()`
+* `glow_up()` = `mutate()`
+* `no_cap()` = `summarise()`
+* `slay()` = `arrange()`
+* `squad_up()` = `group_by()`
+* `disband()` = `ungroup()`
+* `lowkey()` = `rename()`
+* `periodt()` = `distinct()`
+* `main_character()` = `pull()`
+* `send_it()` = `slice_head()`
+* `its_giving()` = `count()`
+
+---
+
+## Example 1 — Average popularity by genre
+
+```{r}
+genre_pop <- spotify_by_genre |>
+  # Gen Z: squad up by genre so each crew gets its own stats
+  # English: group rows by genre to summarize within each genre
+  squad_up(track_genre) |>
+  # Gen Z: no cap the mean popularity for each squad
+  # English: compute the mean popularity per genre
+  no_cap(avg_popularity = mean(popularity, na.rm = TRUE)) |>
+  # Gen Z: slay by highest avg popularity first
+  # English: sort in decreasing order of average popularity
+  slay(desc(avg_popularity))
+
+genre_pop
+# Translator:
+# dplyr equivalent:
+# spotify_by_genre |>
+#   group_by(track_genre) |>
+#   summarise(avg_popularity = mean(popularity, na.rm = TRUE)) |>
+#   arrange(desc(avg_popularity))
+```
+
+---
+
+## Example 2 — High energy, danceable tracks: top 5
+
+```{r}
+high_energy <- spotify_by_genre |>
+  # Gen Z: yeet the sleepy tracks, keep only energetic and danceable ones
+  # English: filter to tracks with energy and danceability above thresholds
+  yeet(energy >= 0.8, danceability >= 0.7) |>
+  # Gen Z: glow up a custom score that mixes dance vibes and speed
+  # English: add a composite score using danceability and tempo
+  glow_up(vibe_score = 0.7 * danceability + 0.3 * scales::rescale(tempo)) |>
+  # Gen Z: vibe check only the essentials
+  # English: select a subset of columns to display
+  vibe_check(track_name, artists, track_genre, energy, 
+             danceability, tempo, vibe_score) |>
+  # Gen Z: slay by the biggest vibe first then send the top 5
+  # English: sort by descending score and take the first 5 rows
+  slay(desc(vibe_score)) |>
+  send_it(5)
+
+high_energy
+# Translator:
+# dplyr equivalent:
+# spotify_by_genre |>
+#   filter(energy >= 0.8, danceability >= 0.7) |>
+#   mutate(vibe_score = 0.7 * danceability + 0.3 * scales::rescale(tempo)) |>
+#   select(track_name, artists, track_genre, energy, 
+#          danceability, tempo, vibe_score) |>
+#   arrange(desc(vibe_score)) |>
+#   slice_head(n = 5)
+```
+
+---
+
+## Example 3 — Popular vs not by genre
+
+```{r}
+pop_counts <- spotify_by_genre |>
+  # Gen Z: it's giving frequency table for each genre's pop status
+  # English: count rows by genre and popularity flag
+  its_giving(track_genre, popular_or_not) |>
+  # Gen Z: slay by the biggest stacks
+  # English: arrange by descending count
+  slay(desc(n))
+
+pop_counts
+# Translator:
+# dplyr equivalent:
+# spotify_by_genre |>
+#   count(track_genre, popular_or_not) |>
+#   arrange(desc(n))
+```
+
+A quick visual:
+
+```{r}
+ggplot(pop_counts, aes(y = track_genre, x = n, fill = popular_or_not)) +
+  geom_col(position = "dodge") +
+  labs(y = "Genre", x = "Count", fill = "Popularity flag",
+       title = "Popular vs not popular by genre")
+```
+
+---
+
+## Example 4 — Rename and tidy a slim view
+
+```{r}
+slim <- spotify_by_genre |>
+  # Gen Z: lowkey change some names so they read cleaner
+  # English: rename columns to shorter labels
+  lowkey(pop = popularity, hype = energy, mood = valence) |>
+  # Gen Z: vibe check only the renamed bits and genre
+  # English: select a few columns to view
+  vibe_check(track_name, artists, track_genre, pop, hype, mood)
+
+head(slim, 6)
+# Translator:
+# dplyr equivalent:
+# spotify_by_genre |>
+#   rename(pop = popularity, hype = energy, mood = valence) |>
+#   select(track_name, artists, track_genre, pop, hype, mood)
+```
+
+---
+
+## Example 5 — Pull tempos for hip-hop and summarize
+
+```{r}
+hiphop_tempo <- spotify_by_genre |>
+  # Gen Z: yeet everything but hip-hop
+  # English: filter to hip-hop genre
+  yeet(track_genre == "hip-hop") |>
+  # Gen Z: give tempo main character energy
+  # English: pull the tempo column as a numeric vector
+  main_character(tempo)
+
+c(mean_tempo = mean(hiphop_tempo, na.rm = TRUE),
+  median_tempo = median(hiphop_tempo, na.rm = TRUE))
+# Translator:
+# dplyr equivalent:
+# hiphop_tempo <- spotify_by_genre |>
+#   filter(track_genre == "hip-hop") |>
+#   pull(tempo)
+# c(mean_tempo = mean(hiphop_tempo, na.rm = TRUE),
+#   median_tempo = median(hiphop_tempo, na.rm = TRUE))
+```
+
+---
+
+## Bonus — Unique genres and a quick peek
+
+```{r}
+genres <- spotify_by_genre |>
+  # Gen Z: periodt get the unique vibes
+  # English: distinct values of genre
+  periodt(track_genre) |>
+  slay(track_genre)
+
+genres
+# Translator:
+# dplyr equivalent:
+# spotify_by_genre |>
+#   distinct(track_genre) |>
+#   arrange(track_genre)
+```
+
+---
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+
+```
+
+---
+
+### Notes and sources
+
+- `spotify_by_genre` description and fields. :contentReference[oaicite:1]{index=1}  
+- `genzplyr` verb mapping and examples. :contentReference[oaicite:2]{index=2}
+
+If you want a PDF output, change the `format` section in the YAML to `pdf` and knit.
+::contentReference[oaicite:3]{index=3}
+```
+
+[1]: https://moderndive.github.io/moderndive/reference/spotify_by_genre.html "Spotify by Genre Dataset — spotify_by_genre • moderndive"
