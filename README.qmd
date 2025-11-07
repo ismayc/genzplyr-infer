@@ -1,0 +1,29 @@
+---
+title: "Testing out genzplyr"
+author: "Chester Ismay"
+date: 2025-11-07
+format: html
+---
+
+```{r}
+# Install the pak package if not already installed
+#install.packages("pak")
+
+# Install the genzplyr package from GitHub
+# pak::pak("hadley/genzplyr")
+
+# Load the genzplyr package
+library(genzplyr)
+
+# Load the moderndive package for the spotify dataset
+library(moderndive)
+
+# Load tidyverse
+library(tidyverse)
+```
+
+```{r}
+# Explore the spotify_by_genre dataset
+send_it(spotify_by_genre)
+```
+
