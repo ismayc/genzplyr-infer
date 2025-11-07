@@ -13,6 +13,12 @@ execute:
   message: false
 ---
 
+```{r}
+#| include: false
+options(width = 120)
+```
+
+
 ## Setup
 
 ```{r}
@@ -217,5 +223,5 @@ sessionInfo()
 
 ### Notes and sources
 
-- `spotify_by_genre` description and fields. :contentReference[oaicite:1]{index=1}  
-- `genzplyr` verb mapping and examples. :contentReference[oaicite:2]{index=2}
+- `spotify_by_genre` description and fields.
+- `genzplyr` verb mapping and examples.
